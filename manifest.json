@@ -1,0 +1,9 @@
+{
+  "name": "Trenažer",
+  "short_name": "Trenažer",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f5f7",
+  "theme_color": "#f4f5f7"
+}

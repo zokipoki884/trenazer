@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="sl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#f4f5f7" />
+  <title>Trenažer</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script>
+    // Apply saved theme before first paint (no flash).
+    try {
+      const t = JSON.parse(localStorage.getItem('theme'));
+      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <header class="setup" id="setup">
+    <div class="row">
+      <button id="btnTrainer" class="dev"><span class="dot"></span><span class="lbl">Poveži trenažer</span></button>
+      <button id="btnHr" class="dev"><span class="dot"></span><span class="lbl">Poveži srčni utrip</span></button>
+      <button id="btnSim" class="dev ghost"><span class="dot"></span><span class="lbl">Simulator</span></button>
+    </div>
+    <div class="row">
+      <label>Vaja
+        <select id="selWorkout"></select>
+      </label>
+      <label>FTP
+        <input id="inpFtp" type="number" inputmode="numeric" min="50" max="600" step="1" /> W
+      </label>
+      <button id="btnTheme" class="ghost">Tema: Auto</button>
+    </div>
+    <p class="msg" id="msg"></p>
+  </header>
+
+  <main class="card" id="card">
+    <section class="top">
+      <div class="power">
+        <span class="now" id="power">--</span>
+        <span class="target">/ <b id="target">--</b> W</span>
+      </div>
+      <div class="vitals">
+        <div class="vital">
+          <svg viewBox="0 0 24 24" class="ico hr"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.1 4.3 2.4.4.7 1.6.7 2 0 .7-1.3 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg>
+          <b id="hr">--</b><small>bpm</small>
+        </div>
+        <div class="vital">
+          <svg viewBox="0 0 24 24" class="ico cad"><path d="M20 12a8 8 0 0 1-13.7 5.6M4 12a8 8 0 0 1 13.7-5.6" fill="none" stroke-width="2.4" stroke-linecap="round"/><path d="M18.5 2.5v4.6h-4.6M5.5 21.5v-4.6h4.6" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <b id="cad">--</b><small>rpm</small>
+        </div>
+      </div>
+    </section>
+
+    <div class="chartWrap"><canvas id="chart"></canvas></div>
+    <div class="times">
+      <span><small>ČAS</small><b id="elapsed">0:00</b></span>
+      <span><b id="remainingTotal">-0:00</b><small>DO KONCA</small></span>
+    </div>
+
+    <section class="current">
+      <div class="badge big" id="curZone">Z1</div>
+      <div class="curInfo">
+        <div class="curName"><span id="curName">—</span> <span class="count" id="curCount"></span></div>
+        <div class="curPct" id="curPct"></div>
+      </div>
+      <div class="countdown" id="countdown">0:00</div>
+    </section>
+    <div class="progress"><div class="bar" id="progress"></div></div>
+
+    <section class="next" id="nextRow">
+      <div class="badge" id="nextZone">Z1</div>
+      <div class="nextLbl">Naslednji <b id="nextW">--</b> W</div>
+      <div class="nextDur" id="nextDur"></div>
+    </section>
+
+    <div class="pausedTag" id="pausedTag">PAVZA</div>
+  </main>
+
+  <footer class="controls">
+    <button id="btnStart" class="primary">Start</button>
+    <button id="btnReset">Ponastavi</button>
+    <div class="intensity">
+      <button id="btnMinus" aria-label="Zmanjšaj intenzivnost">−</button>
+      <span id="intensity">100%</span>
+      <button id="btnPlus" aria-label="Povečaj intenzivnost">+</button>
+    </div>
+    <button id="btnSetup" class="ghost">Nastavitve</button>
+    <button id="btnExport" class="export" hidden>Shrani vožnjo (.fit)</button>
+  </footer>
+
+  <div class="modal" id="ftpModal" hidden>
+    <div class="modalBox">
+      <h2>Tvoj FTP</h2>
+      <p>Moč na intervalih se izračuna iz tega podatka.</p>
+      <div class="ftpRow">
+        <button id="ftpMinus" aria-label="Zmanjšaj FTP za 5">−5</button>
+        <input id="ftpModalInput" type="number" inputmode="numeric" min="50" max="600" step="1" />
+        <span class="unit">W</span>
+        <button id="ftpPlus" aria-label="Povečaj FTP za 5">+5</button>
+      </div>
+      <button id="ftpOk" class="primary">Potrdi</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
