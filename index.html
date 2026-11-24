@@ -25,9 +25,10 @@
       <button id="btnSim" class="dev ghost"><span class="dot"></span><span class="lbl">Simulator</span></button>
     </div>
     <div class="row">
-      <label>Vaja
-        <select id="selWorkout"></select>
-      </label>
+      <button id="btnWorkout" class="workoutBtn" aria-label="Izberi vajo">
+        <span class="wbText"><small>Vaja</small><b id="workoutName">—</b></span>
+        <canvas id="workoutMini"></canvas>
+      </button>
       <label>FTP
         <input id="inpFtp" type="number" inputmode="numeric" min="50" max="600" step="1" /> W
       </label>
@@ -90,6 +91,16 @@
     <button id="btnSetup" class="ghost">Nastavitve</button>
     <button id="btnExport" class="export" hidden>Shrani vožnjo (.fit)</button>
   </footer>
+
+  <div class="modal" id="workoutModal" hidden>
+    <div class="pickerBox">
+      <div class="pickerHead">
+        <h2>Izberi vajo</h2>
+        <button id="pickerClose">Zapri</button>
+      </div>
+      <div id="pickerList"></div>
+    </div>
+  </div>
 
   <div class="modal" id="ftpModal" hidden>
     <div class="modalBox">

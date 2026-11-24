@@ -3,12 +3,21 @@ import { HeartRate } from './ble/heartrate.js';
 import { Simulator } from './ble/simulator.js';
 import { SAMPLE_WORKOUTS } from './workout/samples.js';
 import { MY_WORKOUTS } from './workout/my-workouts.js';
-import { totalDuration, stepAt, fractionAt, stepFraction, fmtTime, resolveWorkout } from './workout/model.js';
+import { POLARIZED_WORKOUTS } from './workout/polarized-workouts.js';
+import { totalDuration, stepAt, fractionAt, stepFraction, fmtTime, resolveWorkout, workoutStats } from './workout/model.js';
 import { zoneFor } from './ui/zones.js';
 import { drawChart } from './ui/chart.js';
 import { encodeRideFit } from './fit/fit-encoder.js';
 
-const ALL_WORKOUTS = [...MY_WORKOUTS, ...SAMPLE_WORKOUTS];
+const pz = (cat) => POLARIZED_WORKOUTS.filter((w) => w.category === cat);
+const WORKOUT_GROUPS = [
+  ['Moje vaje (MyWhoosh)', MY_WORKOUTS],
+  ['Polarized.cc – trde', pz('hard')],
+  ['Polarized.cc – sweet spot', pz('sweetspot')],
+  ['Polarized.cc – lahke (Z1/Z2)', pz('easy')],
+  ['Testne vaje', SAMPLE_WORKOUTS],
+];
+const ALL_WORKOUTS = WORKOUT_GROUPS.flatMap(([, list]) => list);
 const ERG_RELEASE_BELOW = 30; // rpm
 const ERG_RESUME_ABOVE = 50; // rpm
 const MIN_RIDE_RECORDS = 10; // seconds of riding before a ride can be saved
@@ -146,26 +155,57 @@ if (!navigator.bluetooth) {
 }
 
 // ---------- Settings ----------
-const sel = $('selWorkout');
-for (const [label, list] of [['Moje vaje', MY_WORKOUTS], ['Testne vaje', SAMPLE_WORKOUTS]]) {
-  if (!list.length) continue;
-  const g = document.createElement('optgroup');
-  g.label = label;
-  for (const w of list) {
-    const o = document.createElement('option');
-    o.value = w.id;
-    o.textContent = `${w.name} (${fmtTime(totalDuration(w))})`;
-    g.appendChild(o);
-  }
-  sel.appendChild(g);
-}
-sel.value = state.raw.id;
-sel.onchange = () => {
-  state.raw = ALL_WORKOUTS.find((w) => w.id === sel.value);
-  state.workout = resolveWorkout(state.raw, state.ftp);
-  save('workoutId', state.raw.id);
+// Workout picker: cards with name, profile chart, duration, TSS and IF.
+function selectWorkout(id) {
+  const w = ALL_WORKOUTS.find((x) => x.id === id);
+  if (!w) return;
+  state.raw = w;
+  state.workout = resolveWorkout(w, state.ftp);
+  save('workoutId', w.id);
+  updateWorkoutButton();
   reset();
-};
+}
+function updateWorkoutButton() {
+  $('workoutName').textContent = `${state.raw.name} · ${fmtTime(totalDuration(state.raw))}`;
+  drawChart($('workoutMini'), state.workout, 0, [], 0, { marker: false });
+}
+function openPicker() {
+  const list = $('pickerList');
+  list.innerHTML = '';
+  const cards = [];
+  for (const [label, group] of WORKOUT_GROUPS) {
+    if (!group.length) continue;
+    const h = document.createElement('h3');
+    h.textContent = label;
+    const grid = document.createElement('div');
+    grid.className = 'pickerGrid';
+    for (const raw of group) {
+      const w = resolveWorkout(raw, state.ftp);
+      const st = workoutStats(w);
+      const card = document.createElement('button');
+      card.className = 'wCard' + (raw.id === state.raw.id ? ' selected' : '');
+      card.innerHTML = `<span class="wName"></span><canvas></canvas>
+        <span class="wMeta"><span>${fmtTime(totalDuration(w))}</span><span>${Math.round(st.tss)} TSS</span><span>IF ${st.ifactor.toFixed(2)}</span></span>`;
+      card.querySelector('.wName').textContent = raw.name;
+      card.onclick = () => {
+        if (raw.id !== state.raw.id && state.elapsed > 0 && !confirm('Zamenjam vajo? Trenutni napredek se ponastavi.')) return;
+        $('workoutModal').hidden = true;
+        if (raw.id !== state.raw.id) selectWorkout(raw.id);
+      };
+      grid.appendChild(card);
+      cards.push([card.querySelector('canvas'), w]);
+    }
+    list.append(h, grid);
+  }
+  $('workoutModal').hidden = false;
+  // Draw after the modal is visible so canvases have their real size.
+  for (const [canvas, w] of cards) drawChart(canvas, w, 0, [], 0, { marker: false });
+  list.querySelector('.selected')?.scrollIntoView({ block: 'center' });
+}
+$('btnWorkout').onclick = openPicker;
+$('pickerClose').onclick = () => { $('workoutModal').hidden = true; };
+$('workoutModal').onclick = (e) => { if (e.target.id === 'workoutModal') $('workoutModal').hidden = true; };
+updateWorkoutButton();
 
 function setFtp(v) {
   if (!(v >= 50 && v <= 600)) return false;
@@ -174,6 +214,7 @@ function setFtp(v) {
   state.workout = resolveWorkout(state.raw, v);
   state.lastSent.step = -1;
   $('inpFtp').value = v;
+  updateWorkoutButton();
   return true;
 }
 $('inpFtp').value = state.ftp;
@@ -198,6 +239,7 @@ $('btnTheme').onclick = () => {
   theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
   save('theme', theme);
   applyTheme(theme);
+  updateWorkoutButton();
 };
 
 // FTP dialog, shown after connecting the trainer.

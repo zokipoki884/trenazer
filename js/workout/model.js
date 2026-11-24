@@ -51,6 +51,26 @@ export function stepFraction(step) {
   return step.powerEnd == null ? step.power : (step.power + step.powerEnd) / 2;
 }
 
+/** Planned TSS and IF of a (resolved) workout, if ridden exactly on target. */
+export function workoutStats(workout) {
+  const f = [];
+  for (const st of workout.steps) {
+    for (let k = 0; k < st.duration; k++) f.push(fractionAt(st, k + 0.5));
+  }
+  if (!f.length) return { tss: 0, ifactor: 0 };
+  // Normalized power (as fraction of FTP): 30 s rolling average, 4th-power mean.
+  let sum = 0;
+  let acc = 0;
+  let cnt = 0;
+  for (let i = 0; i < f.length; i++) {
+    sum += f[i];
+    if (i >= 30) sum -= f[i - 30];
+    if (i >= 29) { acc += (sum / Math.min(30, i + 1)) ** 4; cnt++; }
+  }
+  const ifactor = cnt ? (acc / cnt) ** 0.25 : f.reduce((s, v) => s + v, 0) / f.length;
+  return { ifactor, tss: (f.length / 3600) * ifactor * ifactor * 100 };
+}
+
 export function fmtTime(sec) {
   sec = Math.max(0, Math.round(sec));
   const h = Math.floor(sec / 3600);

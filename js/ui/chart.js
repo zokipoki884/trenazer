@@ -7,7 +7,7 @@ function css(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
-export function drawChart(canvas, workout, elapsed, actual, ftpWatts) {
+export function drawChart(canvas, workout, elapsed, actual, ftpWatts, { marker = true } = {}) {
   const dpr = window.devicePixelRatio || 1;
   const w = canvas.clientWidth;
   const h = canvas.clientHeight;
@@ -77,6 +77,7 @@ export function drawChart(canvas, workout, elapsed, actual, ftpWatts) {
   }
 
   // Marker
+  if (!marker) return;
   ctx.fillStyle = css('--text');
   ctx.fillRect(px - 1.5, 6, 3, h - 6);
   ctx.beginPath();
