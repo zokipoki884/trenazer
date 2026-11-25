@@ -97,12 +97,22 @@ function setDevBtn(btn, status, label) {
   btn.classList.toggle('busy', status === 'busy');
   btn.querySelector('.lbl').textContent = label;
 }
-function showMsg(text) { $('msg').textContent = text || ''; }
+function showMsg(text, kind = 'error') {
+  const m = $('msg');
+  m.textContent = text || '';
+  m.classList.toggle('info', kind === 'info');
+}
+function errText(err) {
+  if (!err) return 'neznana napaka';
+  const name = err.name && err.name !== 'Error' ? `${err.name}: ` : '';
+  return name + (err.message || String(err));
+}
 
 async function connectTrainer(dev, btn, defaultLabel) {
   showMsg('');
   setDevBtn(btn, 'busy', 'Povezujem…');
   dev.onData = onTrainerData;
+  dev.onStatus = (t) => showMsg(t, 'info');
   dev.onDisconnect = () => {
     if (state.trainer === dev) state.trainer = null;
     setDevBtn(btn, 'off', defaultLabel);
@@ -113,10 +123,16 @@ async function connectTrainer(dev, btn, defaultLabel) {
     state.trainer = dev;
     state.lastSent = { w: null, at: 0, step: -1 };
     setDevBtn(btn, 'on', dev.name + (dev.canControl ? ' · ERG' : ' · samo branje'));
+    showMsg(dev.canControl || !dev.controlError ? '' : `Trenažer je povezan samo za branje. ${dev.controlError}`);
     askFtp();
   } catch (err) {
+    console.error('Trainer connect failed', err);
     setDevBtn(btn, 'off', defaultLabel);
-    if (err?.name !== 'NotFoundError') showMsg(err.message || String(err));
+    if (err?.name === 'NotFoundError') {
+      showMsg('Trenažer ni bil izbran ali najden. Zavrti pedala, da se zbudi, zapri MyWhoosh in poskusi znova.', 'info');
+    } else {
+      showMsg('Trenažer: ' + errText(err));
+    }
   }
 }
 
@@ -147,7 +163,7 @@ $('btnHr').onclick = async () => {
     setDevBtn(btn, 'on', dev.name);
   } catch (err) {
     setDevBtn(btn, 'off', 'Poveži srčni utrip');
-    if (err?.name !== 'NotFoundError') showMsg(err.message || String(err));
+    if (err?.name !== 'NotFoundError') showMsg('Srčni utrip: ' + errText(err));
   }
 };
 if (!navigator.bluetooth) {

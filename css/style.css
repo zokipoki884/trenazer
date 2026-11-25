@@ -84,7 +84,8 @@ input { width: 80px; text-align: center; }
 .dev.on .dot { background: var(--ok); opacity: 1; }
 .dev.busy .dot { background: var(--cad); opacity: 1; animation: blink 1s infinite; }
 @keyframes blink { 50% { opacity: .2; } }
-.msg { margin: 0; color: var(--warn); font-size: 14px; min-height: 1em; }
+.msg { margin: 0; color: var(--warn); font-size: 18px; font-weight: 600; min-height: 1em; }
+.msg.info { color: var(--muted); }
 body.running .setup { display: none; }
 body.running.showSetup .setup { display: flex; }
 
