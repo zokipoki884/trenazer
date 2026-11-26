@@ -5,7 +5,7 @@ import { SAMPLE_WORKOUTS } from './workout/samples.js';
 import { MY_WORKOUTS } from './workout/my-workouts.js';
 import { POLARIZED_WORKOUTS } from './workout/polarized-workouts.js';
 import { totalDuration, stepAt, fractionAt, stepFraction, fmtTime, resolveWorkout, workoutStats } from './workout/model.js';
-import { zoneFor } from './ui/zones.js';
+import { zoneFor, hrZoneFor } from './ui/zones.js';
 import { drawChart } from './ui/chart.js';
 import { encodeRideFit } from './fit/fit-encoder.js';
 
@@ -35,6 +35,7 @@ function save(key, val) {
 // ---------- State ----------
 const state = {
   ftp: load('ftp', 250),
+  maxHr: load('maxHr', 185),
   raw: ALL_WORKOUTS.find((w) => w.id === load('workoutId', '')) || ALL_WORKOUTS[0],
   workout: null, // raw workout with watts converted to FTP fractions
   intensity: 1.0,
@@ -233,6 +234,12 @@ function setFtp(v) {
   updateWorkoutButton();
   return true;
 }
+$('inpMaxHr').value = state.maxHr;
+$('inpMaxHr').onchange = () => {
+  const v = parseInt($('inpMaxHr').value, 10);
+  if (v >= 100 && v <= 230) { state.maxHr = v; save('maxHr', v); }
+  else $('inpMaxHr').value = state.maxHr;
+};
 $('inpFtp').value = state.ftp;
 $('inpFtp').onchange = () => {
   if (!setFtp(parseInt($('inpFtp').value, 10))) $('inpFtp').value = state.ftp;
@@ -277,18 +284,32 @@ $('ftpOk').onclick = () => {
 $('ftpModalInput').onkeydown = (e) => { if (e.key === 'Enter') $('ftpOk').click(); };
 
 // ---------- Controls ----------
+// Keep the screen on the whole time the page is open (Screen Wake Lock API).
+// The lock is dropped by the browser when the page is hidden, so re-acquire it when it comes back.
 let wakeLock = null;
-async function keepAwake(on) {
-  try {
-    if (on && 'wakeLock' in navigator && document.visibilityState === 'visible') {
-      wakeLock = await navigator.wakeLock.request('screen');
-    } else if (!on && wakeLock) {
-      await wakeLock.release();
-      wakeLock = null;
-    }
-  } catch { /* not supported */ }
+function setWakeStatus(ok, detail = '') {
+  const el = $('wakeStatus');
+  el.classList.toggle('warn', !ok);
+  el.textContent = ok
+    ? '☀ Zaslon ostane prižgan'
+    : '⚠ Zaslon se lahko ugasne – v nastavitvah naprave izklopi samodejno zaklepanje' + (detail ? ` (${detail})` : '');
 }
-document.addEventListener('visibilitychange', () => { if (state.running) keepAwake(true); });
+async function keepAwake() {
+  if (!('wakeLock' in navigator)) { setWakeStatus(false, 'brskalnik ne podpira'); return; }
+  if (wakeLock && !wakeLock.released) return;
+  if (document.visibilityState !== 'visible') return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { if (document.visibilityState === 'visible') setWakeStatus(false); });
+    setWakeStatus(true);
+  } catch (err) {
+    setWakeStatus(false, err?.name || 'napaka');
+  }
+}
+document.addEventListener('visibilitychange', keepAwake);
+// Some browsers grant the lock only after a user gesture: retry on every tap until it holds.
+document.addEventListener('pointerdown', keepAwake);
+keepAwake();
 
 function setRunning(on) {
   state.running = on;
@@ -297,7 +318,7 @@ function setRunning(on) {
   $('btnStart').textContent = on ? 'Pavza' : state.elapsed > 0 ? 'Nadaljuj' : 'Start';
   state.lastNow = performance.now();
   state.lastSent.step = -1; // force sending target on (re)start
-  keepAwake(on);
+  keepAwake();
 }
 
 $('btnStart').onclick = () => {
@@ -483,6 +504,15 @@ function render(info, target, total) {
 
   const hrFresh = state.hr != null && now - state.hrAt < 5000;
   $('hr').textContent = hrFresh ? state.hr : '--';
+  const hz = $('hrZone');
+  hz.classList.toggle('off', !hrFresh);
+  if (hrFresh) {
+    const z = hrZoneFor(state.hr, state.maxHr);
+    hz.style.setProperty('--hrz', z.color);
+    $('hrZoneTxt').textContent = z.name;
+  } else {
+    $('hrZoneTxt').textContent = '–';
+  }
   const cadFresh = state.cadence != null && now - state.cadenceAt < 3000;
   $('cad').textContent = cadFresh ? Math.round(state.cadence) : state.trainer ? '0' : '--';
 

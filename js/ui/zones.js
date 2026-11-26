@@ -9,6 +9,20 @@ export const ZONES = [
   { id: 7, name: 'Z7', max: Infinity, color: '#5b3a8c' },
 ];
 
+// Heart-rate zones (fraction of max HR), Garmin-style colours.
+export const HR_ZONES = [
+  { name: 'Z1', max: 0.60, color: '#9aa7b4' },
+  { name: 'Z2', max: 0.70, color: '#3b82f6' },
+  { name: 'Z3', max: 0.80, color: '#22a55a' },
+  { name: 'Z4', max: 0.90, color: '#f08a24' },
+  { name: 'Z5', max: Infinity, color: '#e0443c' },
+];
+
+export function hrZoneFor(hr, maxHr) {
+  const f = hr / maxHr;
+  return HR_ZONES.find((z) => f < z.max) || HR_ZONES[HR_ZONES.length - 1];
+}
+
 export function zoneFor(fraction) {
   return ZONES.find((z) => fraction <= z.max + 1e-9) || ZONES[ZONES.length - 1];
 }
