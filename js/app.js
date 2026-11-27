@@ -554,6 +554,26 @@ function render(info, target, total) {
   drawChart($('chart'), state.workout, state.elapsed, state.actual, state.ftp * state.intensity);
 }
 
+// ---------- Installable app (PWA) ----------
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch((err) => console.warn('Service worker ni registriran', err));
+}
+// Chrome (Android) fires this when the app can be installed; show our own button for it.
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  installPrompt = e;
+  $('btnInstall').hidden = false;
+});
+$('btnInstall').onclick = async () => {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice.catch(() => {});
+  installPrompt = null;
+  $('btnInstall').hidden = true;
+};
+window.addEventListener('appinstalled', () => { $('btnInstall').hidden = true; });
+
 window.__trenazer = state; // for debugging from the console
 setInterval(tick, 250);
 window.addEventListener('resize', tick);

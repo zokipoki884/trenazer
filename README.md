@@ -15,6 +15,14 @@ Web Bluetooth zahteva HTTPS, zato aplikacijo objavi, npr. na GitHub Pages:
 2. Settings → Pages → Source: `main` / root.
 3. Naslov `https://<uporabnik>.github.io/<repo>/` odpri v Bluefy.
 
+## Namestitev kot aplikacija (Android, Chrome)
+1. V Chromu odpri naslov aplikacije (GitHub Pages).
+2. Klikni zeleni gumb **Namesti aplikacijo** v vrstici nastavitev ali v Chromu ⋮ → **Namesti aplikacijo**.
+3. Ikona Trenažer se pojavi med aplikacijami; odpre se čez cel zaslon, ležeče.
+
+Po prvem odprtju aplikacija deluje tudi brez interneta. Ko je internet, vedno naloži najnovejšo različico z GitHuba.
+Ko dodaš novo datoteko v aplikacijo, jo dodaj tudi na seznam v `sw.js` in povečaj `CACHE` (npr. `trenazer-v2`).
+
 ## Izvoz v Garmin Connect
 Aplikacija med vožnjo vsako sekundo beleži moč, srčni utrip in kadenco (shrani se tudi ob osvežitvi strani).
 Ob pavzi ali koncu klikni **Shrani vožnjo (.fit)**:
