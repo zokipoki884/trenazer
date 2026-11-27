@@ -255,3 +255,44 @@ body.ergReleased .pausedTag { background: var(--cad); font-size: 20px; padding: 
 body:not(.running) #btnSetup { display: none; }
 button.export { background: var(--ok); color: #fff; }
 button[hidden] { display: none; }
+
+/* ---------- Low screens (phone in landscape): size everything by screen height ---------- */
+@media (max-height: 600px) {
+  body { gap: 6px; padding: max(6px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+  button, select, input { min-height: 36px; padding: 6px 12px; border-radius: 10px; }
+  .setup { gap: 6px; }
+  .setup .dev { padding: 6px 10px; }
+  .workoutBtn { min-width: 0; padding: 4px 10px; }
+  .workoutBtn canvas { width: 90px; height: 28px; }
+
+  .card { padding: 10px 16px; gap: 1.2vh; border-radius: 16px; max-width: none; }
+  .setup, .controls { max-width: none; }
+  .power .now { font-size: 22vh; }
+  .power .target { font-size: 6.5vh; }
+  .vitals { gap: 0; }
+  .vital b { font-size: 11vh; }
+  .vital small { font-size: 4vh; }
+  .ico { width: 6vh; height: 6vh; }
+  .chartWrap { min-height: 36px; }
+  .times { font-size: 9vh; margin-top: 0; }
+  .current { padding-top: 1.2vh; gap: 12px; }
+  .badge.big { min-width: 13vh; height: 13vh; font-size: 5.5vh; border-radius: 10px; }
+  .curName { font-size: 5.5vh; }
+  .curPct { font-size: 4vh; }
+  .hrZone { width: 16vh; height: 16vh; }
+  .hrZone span { font-size: 5.5vh; }
+  .countdown { font-size: 17vh; }
+  .progress { height: 6px; }
+  .next { font-size: 4.2vh; gap: 10px; }
+  .next .badge { height: 6.5vh; min-width: 10vh; font-size: 3.6vh; border-radius: 8px; }
+  .pausedTag { top: 6px; }
+  .intensity button { min-width: 36px; padding: 2px 8px; }
+
+  .modalBox { padding: 16px 24px; gap: 10px; }
+  .modalBox h2 { font-size: 26px; }
+  .ftpRow input { font-size: 52px; width: 150px; }
+  .ftpRow button { min-height: 52px; }
+  #ftpOk { min-height: 48px; }
+  .pickerHead { padding: 10px 16px; }
+  .pickerHead h2 { font-size: 22px; }
+}
